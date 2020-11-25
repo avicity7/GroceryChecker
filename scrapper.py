@@ -1,8 +1,5 @@
 from urllib.request import Request, urlopen
 
-s = ","
-i = 8
-count = 0
 url = Request('https://www.fairprice.com.sg/product/13111689', headers={'User-Agent': 'Mozilla/5.0'})
 page = urlopen(url)
 
