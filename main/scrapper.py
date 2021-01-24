@@ -197,12 +197,14 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 #MarketFresh.sg
-url = Request('https://marketfresh.com.sg/collections/chicken/products/chicken-thigh-1pc', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('price:amount\" content=\"')+23:html.find('price:amount\" content=\"')+28]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[18:text.find("|")-1]
 """
