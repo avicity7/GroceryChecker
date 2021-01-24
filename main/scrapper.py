@@ -134,14 +134,23 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 # Cold Storage
-url = Request('https://coldstorage.com.sg/magnolia-5015207', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\":\"')+9:html.find('\"price\":\"')+16]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[8500:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
+unitFix = str(unitFinder)[69:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
 #Eamart
 url = Request('https://www.eamart.com/product/list/best-sellers/Coca-Cola-No-Sugar---Case-1032', headers={'User-Agent': 'Mozilla/5.0'})
 page = urlopen(url)
