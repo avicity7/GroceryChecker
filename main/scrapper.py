@@ -104,14 +104,23 @@ while True:
 
 """
 # FairPrice
-url = Request(link, headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\\"price\\":')+13:html.find('\\"price\\":')+20]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[700:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+unitFix = str(unitFinder)[133:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
 """
 
 """
