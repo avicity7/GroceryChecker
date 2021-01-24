@@ -1,8 +1,10 @@
 from urllib.request import Request, urlopen
 from requests_html import HTMLSession
+from bs4 import BeautifulSoup
 
 extraLinks = []
 session = HTMLSession()
+productUnit = ""
 while True:
     inp = input("Please input the item that you would like to find. Please be as specific as possible:")
     sep = "%20"
@@ -22,30 +24,28 @@ while True:
         url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
         page = urlopen(url)
 
-        
+        productUnit = ""
         html_bytes = page.read()
         html = html_bytes.decode("utf-8")
-        priceFinder = html[html.find('\\"price\\":')+13:html.find('\\"price\\":')+20]
-        priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-        price = float("".join(priceFix))
-        nameFinder = html[html.find('\"name\":')+8:html.find('\"name\":')+200]
-        nameFix = [x for x in nameFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-        unitFinder = html[html.find('\"DisplayUnit\":')+15:html.find('\"DisplayUnit\":')+23]
-        unitFix = [x for x in unitFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-        for i in range(0, len(nameFix)):
-            try:
-                if nameFix[i] == " ":
-                    if nameFix[i+1] == " ":
-                        del nameFix[i:]
-                elif nameFix[i] == "\n":
-                    del nameFix[i]
-            except:
-                break
-                                                   
-        productName = str("".join(nameFix))
-        productUnit = str("".join(unitFix))
+        soup = BeautifulSoup(html, "html.parser")
+        text = soup.get_text()
+        priceFix = text[700:]
+        price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+        for i in range(5,10):
+            try: 
+                temp = int(price[i])
+            except: 
+                price = price[0:i]
+        productName = text[0:text.find("|")-1]
+        unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+        unitFix = str(unitFinder)[133:]
+        for i in unitFix:
+            if i != "<":
+                productUnit += i 
+            else: 
+                break 
         
-        print("\nItem found: {productname}{productunit} ${cost}".format(productname = productName, productunit = productUnit, cost = price))
+        print("\nItem found: {productname} {productunit} {cost}".format(productname = productName, productunit = productUnit, cost = price))
         print("\nIs this the item that you were looking for?")
         inp = input("\nType yes or no:")
         if inp == "yes":
@@ -61,30 +61,29 @@ while True:
                             product = y
                             url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
                             page = urlopen(url)
-
+                            productUnit = ""
                             html_bytes = page.read()
                             html = html_bytes.decode("utf-8")
-                            priceFinder = html[html.find('\\"price\\":')+13:html.find('\\"price\\":')+20]
-                            priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-                            price = float("".join(priceFix))
-                            nameFinder = html[html.find('\"name\":')+8:html.find('\"name\":')+200]
-                            nameFix = [x for x in nameFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-                            unitFinder = html[html.find('\"DisplayUnit\":')+15:html.find('\"DisplayUnit\":')+20]
-                            unitFix = [x for x in unitFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-                            for i in range(0, len(nameFix)):
-                                try:
-                                    if nameFix[i] == " ":
-                                        if nameFix[i+1] == " ":
-                                               del nameFix[i:]
-                                    elif nameFix[i] == "\n":
-                                        del nameFix[i]
-                                except:
-                                    break
+                            soup = BeautifulSoup(html, "html.parser")
+                            text = soup.get_text()
+                            priceFix = text[700:]
+                            price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+                            for i in range(5,10):
+                                try: 
+                                    temp = int(price[i])
+                                except: 
+                                    price = price[0:i]
+                            productName = text[0:text.find("|")-1]
+                            unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+                            unitFix = str(unitFinder)[133:]
+                            for i in unitFix:
+                                if i != "<":
+                                    productUnit += i 
+                                else: 
+                                    break 
 
                             extraLinks.append(product)        
-                            productName = str("".join(nameFix))
-                            productUnit = str("".join(unitFix))
-                            print("{time}. {productname} {productunit} ${cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
+                            print("{time}. {productname} {productunit} {cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
                             break
                     except:
                         continue
