@@ -101,6 +101,40 @@ while True:
         print("\nSorry, we are not able to find that item. Please enter a different item or name.")
         continue
 
+# Price Comparison
+# Storage structure:
+# item_price = ["item_1",[price1, price2, price3],"item_2",[price1, price2, price3]]
+# item_name = ["item_1",[name1, name2, name3],"item_2",[name1, name2, name3]]
+# item_qty = ["item_1",[qty1, qty2, qty3],"item_2",[qty1, qty2, qty3]]
+item_price = []
+item_name = []
+item_qty = []
+store_name = []
+final = []
+def addItem():
+    item_price.append(list())
+    item_name.append(list())
+    item_qty.append(list())
+    store_name.append(list())
+    
+def addPrices(price, name, qty, store, item_no):
+    item_price[item_no].append(price)
+    item_name[item_no].append(name)
+    item_qty[item_no].append(qty)
+    store_name[item_no].append(store)
+
+def finalAddItem(price, name, qty, store):
+    final.append([price, name, qty, store])
+
+def priceComparison():
+    for item in item_price:
+        lowest = 10000000
+        for price in item:
+            if price < lowest:
+                lowest = price
+        y = item_price.index(item)
+        x = item.index(lowest)
+        finalAddItem(item[x], item_name[y][x], item_qty[y][x], store_name[y][x])
 
 """
 # FairPrice
