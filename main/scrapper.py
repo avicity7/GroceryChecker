@@ -138,14 +138,23 @@ def priceComparison():
 
 """
 # FairPrice
-url = Request(link, headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\\"price\\":')+13:html.find('\\"price\\":')+20]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[700:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+unitFix = str(unitFinder)[133:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
 """
 
 """
@@ -159,23 +168,41 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 # Giant
-url = Request('https://giant.sg/unpolished-brown-rice-5kg-5021025', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\":\"')+9:html.find('\"price\":\"')+16]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[8400:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
+unitFix = str(unitFinder)[69:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break
 # Cold Storage
-url = Request('https://coldstorage.com.sg/magnolia-5015207', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\":\"')+9:html.find('\"price\":\"')+16]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[8500:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
+unitFix = str(unitFinder)[69:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
 #Eamart
 url = Request('https://www.eamart.com/product/list/best-sellers/Coca-Cola-No-Sugar---Case-1032', headers={'User-Agent': 'Mozilla/5.0'})
 page = urlopen(url)
@@ -195,30 +222,43 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 #Dei
-url = Request('https://www.dei.com.sg/islandwide/retail/product/maggi-2-minute-instant-noodles-asam-laksa-5-x-78g/21845', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\" value=\"')+15:html.find('\"price\" value=\"')+20]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[9:text.find("|")-1]
 #Purely Fresh
-url = Request('https://www.purelyfresh.com.sg/fresh-fruits/2914-passionfruit.html', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('price:amount\" content=\"')+23:html.find('price:amount\" content=\"')+28]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[9:text.find(")")+1]
+unitFinder = soup.findAll("div", {"class": "product-information"})
+unitFix = str(unitFinder)[113:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break
 #MarketFresh.sg
-url = Request('https://marketfresh.com.sg/collections/chicken/products/chicken-thigh-1pc', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('price:amount\" content=\"')+23:html.find('price:amount\" content=\"')+28]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[18:text.find("|")-1]
 """
