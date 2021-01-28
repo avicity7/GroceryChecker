@@ -298,7 +298,7 @@ print(round(price, 2))
 #Dei
 soup = BeautifulSoup(html, "html.parser")
 text = soup.get_text()
-priceFix = text[2000:]
+priceFix = text[2700:]
 price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
 for i in range(5,10):
     try: 
@@ -306,6 +306,8 @@ for i in range(5,10):
     except: 
         price = price[0:i]
 name = text[9:text.find("|")-1]
+nom = name.split(" - ")
+weight = nom[-1]
 #Purely Fresh
 soup = BeautifulSoup(html, "html.parser")
 text = soup.get_text()
