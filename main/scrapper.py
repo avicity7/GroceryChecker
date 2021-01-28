@@ -39,6 +39,7 @@ def priceComparison():
         finalAddItem(item[x], item_name[y][x], item_qty[y][x], store_name[y][x])
 
 def storeSearch(searchString):
+    
     #Cold Storage Search
     lst = [] 
     temp = 0
@@ -49,28 +50,70 @@ def storeSearch(searchString):
     page = urlopen(url)
     #Getting item parameters
     productUnit = ""
+    brandName = str()
     html_bytes = page.read()
     html = html_bytes.decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text()
     unitFinder = soup.findAll("div", {"class": "content_price"})
-    first, second,third = int(),int(),int()
+    number = int() 
+    price = str() 
+    sw = 0
+    coldProductName = str()
+    temp = str() 
     decimal = str()
+    unitFinder = str(unitFinder[0])
 
-    for i in range(0,len(str(unitFinder[0]))):
-        try: 
-            first = int(str(unitFinder[0])[i])
-            decimal = str(unitFinder[0])[i+1]
-            second = int(str(unitFinder[0])[i+2])
-            third = int(str(unitFinder[0])[i+3])
-            break
+    for i in range(0,len(unitFinder)):
+        try:
+            number = int(unitFinder[i])
+            if sw == 1:
+                price += str(number)
+            
         except: 
-            continue
+            if unitFinder[i] == "$":
+                sw = 1
+            elif unitFinder[i] == "." and sw == 1: 
+                price += unitFinder[i]
+            elif unitFinder[i] == "<" and sw == 1:
+                break 
+            else: 
+                continue
 
-    price = str(first) + decimal + str(second) + str(third)
+    brandFinder = soup.findAll("div", {"class": "product_category_name"})
+    brandFinder = str(brandFinder[0])
+    brand = str()
+    for i in range(0,len(brandFinder)):
+        try:
+            if brandFinder[i] + brandFinder[i+1] + brandFinder[i+2] == "<b>":
+                for i in range(i+3,len(brandFinder)):
+                    if brandFinder[i] == "<":
+                        break 
+                    else: 
+                        brand+= brandFinder[i]
+        except: 
+            break
 
+    nameFinder = soup.findAll("div", {"class": "product_category_name"})
+    nameFinder = str(nameFinder[0])
+    nameFinder = nameFinder.split()
+    exceptions = ['"',",","<",">"]
+    name = str()
+    nameSw = 0
+    for x in nameFinder: 
+        nameSw = 0
+        for y in x: 
+            if y in exceptions:
+                nameSw = 1
+        if nameSw == 0: 
+            name += x 
+            name += " "
+
+    coldProductName = brand + " " + name
+    coldPrice = price 
+
+    return 
     
-    return price
 
 extraLinks = []
 session = HTMLSession()
