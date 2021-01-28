@@ -45,15 +45,7 @@ def storeSearch(searchString):
     sep = "+"
     coldSearch = searchString.split()
     coldSearch = sep.join(coldSearch)
-    r = session.get('https://coldstorage.com.sg/search?q=' + coldSearch)
-    links = r.html.links
-    searchLinks = [x for x in links]
-    for i in range(0,len(searchLinks)):
-        if searchLinks[i].count("/") >1:
-            lst.append(searchLinks[i])
-        
-    '''
-    url = Request('https://coldstorage.com.sg/' + product, headers={'User-Agent': 'Mozilla/5.0'})
+    url = Request('https://coldstorage.com.sg/search?q=' + coldSearch, headers={'User-Agent': 'Mozilla/5.0'})
     page = urlopen(url)
     #Getting item parameters
     productUnit = ""
@@ -61,26 +53,24 @@ def storeSearch(searchString):
     html = html_bytes.decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text()
-    priceFix = text[8500:]
-    price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
-    for i in range(5,10):
+    unitFinder = soup.findAll("div", {"class": "content_price"})
+    first, second,third = int(),int(),int()
+    decimal = str()
+
+    for i in range(0,len(str(unitFinder[0]))):
         try: 
-            temp = int(price[i])
-        except: 
-            price = price[0:i]
-    name = text[0:text.find("|")-1]
-    unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
-    unitFix = str(unitFinder)[69:]
-    for i in unitFix:
-        if i not in ["<", '"', "'", "!", "/"]:
-            unit += i 
-        else: 
+            first = int(str(unitFinder[0])[i])
+            decimal = str(unitFinder[0])[i+1]
+            second = int(str(unitFinder[0])[i+2])
+            third = int(str(unitFinder[0])[i+3])
             break
-    '''
-    print(coldSearch)
-    print(lst)
-    print(searchLinks)
-    return 
+        except: 
+            continue
+
+    price = str(first) + decimal + str(second) + str(third)
+
+    
+    return price
 
 extraLinks = []
 session = HTMLSession()
