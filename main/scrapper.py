@@ -2,6 +2,141 @@ from urllib.request import Request, urlopen
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 
+# Price Comparison
+# Storage structure:
+# item_price = ["item_1",[price1, price2, price3],"item_2",[price1, price2, price3]]
+# item_name = ["item_1",[name1, name2, name3],"item_2",[name1, name2, name3]]
+# item_qty = ["item_1",[qty1, qty2, qty3],"item_2",[qty1, qty2, qty3]]
+item_price = []
+item_name = []
+item_qty = []
+store_name = []
+final = []
+
+def addItem(item):
+    item_price.append(item)
+    item_name.append(item)
+    item_qty.append(item)
+    store_name.append(item)
+    
+def addPrices(price, name, qty, store, item_no):
+    item_price[item_no].append(price)
+    item_name[item_no].append(name)
+    item_qty[item_no].append(qty)
+    store_name[item_no].append(store)
+
+def finalAddItem(price, name, qty, store):
+    final.append([price, name, qty, store])
+
+def priceComparison():
+    for item in item_price:
+        lowest = 10000000
+        for price in item:
+            if price < lowest:
+                lowest = price
+        y = item_price.index(item)
+        x = item.index(lowest)
+        finalAddItem(item[x], item_name[y][x], item_qty[y][x], store_name[y][x])
+
+def storeSearch(searchString):
+    
+    #Cold Storage Search
+    lst = [] 
+    temp = 0
+    sep = "+"
+    coldSearch = searchString.split()
+    coldSearch = sep.join(coldSearch)
+    url = Request('https://coldstorage.com.sg/search?q=' + coldSearch, headers={'User-Agent': 'Mozilla/5.0'})
+    page = urlopen(url)
+    #Getting item parameters
+    productUnit = ""
+    brandName = str()
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text()
+    unitFinder = soup.findAll("div", {"class": "content_price"})
+    number = int() 
+    price = str() 
+    sw = 0
+    coldProductName = str()
+    temp = str() 
+    decimal = str()
+    unitFinder = str(unitFinder[0])
+
+    for i in range(0,len(unitFinder)):
+        try:
+            number = int(unitFinder[i])
+            if sw == 1:
+                price += str(number)
+            
+        except: 
+            if unitFinder[i] == "$":
+                sw = 1
+            elif unitFinder[i] == "." and sw == 1: 
+                price += unitFinder[i]
+            elif unitFinder[i] == "<" and sw == 1:
+                break 
+            else: 
+                continue
+
+    brandFinder = soup.findAll("div", {"class": "product_category_name"})
+    brandFinder = str(brandFinder[0])
+    brand = str()
+    for i in range(0,len(brandFinder)):
+        try:
+            if brandFinder[i] + brandFinder[i+1] + brandFinder[i+2] == "<b>":
+                for i in range(i+3,len(brandFinder)):
+                    if brandFinder[i] == "<":
+                        break 
+                    else: 
+                        brand+= brandFinder[i]
+        except: 
+            break
+
+    nameFinder = soup.findAll("div", {"class": "product_category_name"})
+    nameFinder = str(nameFinder[0])
+    nameFinder = nameFinder.split()
+    exceptions = ['"',",","<",">"]
+    name = str()
+    nameSw = 0
+    for x in nameFinder: 
+        nameSw = 0
+        for y in x: 
+            if y in exceptions:
+                nameSw = 1
+        if nameSw == 0: 
+            name += x 
+            name += " "
+
+    coldProductName = brand + " " + name
+    coldPrice = price 
+
+    return ""
+    
+def mfstoreSearch(searchString):
+    #Marketfresh Search
+    lst = [] 
+    temp = 0
+    sep = "+"
+    marketSearch = searchString.split()
+    marketSearch = sep.join(marketSearch)
+    url = Request('https://marketfresh.com.sg/search?q=' + marketSearch, headers={'User-Agent': 'Mozilla/5.0'})
+    page = urlopen(url)
+
+    #Getting item link
+    productUnit = ""
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text()
+    priceFinder = str(soup.findAll("h5", {"class": "text-center"}))
+    link = "https://marketfresh.com.sg" + priceFinder[34:priceFinder.find("title")-2]
+    
+    
+#####################
+
+"""
 extraLinks = []
 session = HTMLSession()
 productUnit = ""
@@ -11,6 +146,7 @@ while True:
     inp = inp.split()
     inp = sep.join(inp)
     try:
+        #Getting links from Fairprice search page 
         r = session.get('https://www.fairprice.com.sg/search?query=' + inp)
         links = r.html.links
         e = [x for x in links]
@@ -23,7 +159,7 @@ while True:
                 continue
         url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
         page = urlopen(url)
-
+        #Getting item parameters
         productUnit = ""
         html_bytes = page.read()
         html = html_bytes.decode("utf-8")
@@ -48,9 +184,12 @@ while True:
         print("\nItem found: {productname} {productunit} {cost}".format(productname = productName, productunit = productUnit, cost = price))
         print("\nIs this the item that you were looking for?")
         inp = input("\nType yes or no:")
+        #When item found is correct: 
         if inp == "yes":
-            print("Great!")
+            search = productName +" " + productUnit
+            print(storeSearch(search))
             break
+        #When item found is incorrect, going through other search results in Fairprice search: 
         elif inp == "no":
             print("\nAlright! We'll display the other top 5 search results:")
             for times in range (1,6):
@@ -91,64 +230,62 @@ while True:
             inp = input("\nWhich of these are what you are looking for? Enter 0 if it is none of them, else enter the number of the item:")
             if inp == "0":
                 continue
+            #Correct item found 
             else:
-                print(extraLinks[int(inp)-1])
-                
-
-                
-                
+                url = Request('https://www.fairprice.com.sg' + extraLinks[int(inp)-1], headers={'User-Agent': 'Mozilla/5.0'})
+                page = urlopen(url)
+                productUnit = ""
+                html_bytes = page.read()
+                html = html_bytes.decode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+                text = soup.get_text()
+                priceFix = text[700:]
+                price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+                for i in range(5,10):
+                    try: 
+                        temp = int(price[i])
+                    except: 
+                        price = price[0:i]
+                productName = text[0:text.find("|")-1]
+                unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+                unitFix = str(unitFinder)[133:]
+                for i in unitFix:
+                    if i != "<":
+                        productUnit += i 
+                    else: 
+                        break
+                search = productName +" " + productUnit
+                print(storeSearch(search))
+                break
+                          
     except:
         print("\nSorry, we are not able to find that item. Please enter a different item or name.")
         continue
 
-# Price Comparison
-# Storage structure:
-# item_price = ["item_1",[price1, price2, price3],"item_2",[price1, price2, price3]]
-# item_name = ["item_1",[name1, name2, name3],"item_2",[name1, name2, name3]]
-# item_qty = ["item_1",[qty1, qty2, qty3],"item_2",[qty1, qty2, qty3]]
-item_price = []
-item_name = []
-item_qty = []
-store_name = []
-final = []
-def addItem():
-    item_price.append(list())
-    item_name.append(list())
-    item_qty.append(list())
-    store_name.append(list())
-    
-def addPrices(price, name, qty, store, item_no):
-    item_price[item_no].append(price)
-    item_name[item_no].append(name)
-    item_qty[item_no].append(qty)
-    store_name[item_no].append(store)
-
-def finalAddItem(price, name, qty, store):
-    final.append([price, name, qty, store])
-
-def priceComparison():
-    for item in item_price:
-        lowest = 10000000
-        for price in item:
-            if price < lowest:
-                lowest = price
-        y = item_price.index(item)
-        x = item.index(lowest)
-        finalAddItem(item[x], item_name[y][x], item_qty[y][x], store_name[y][x])
 
 """
+'''
 # FairPrice
-url = Request(link, headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\\"price\\":')+13:html.find('\\"price\\":')+20]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
-"""
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[700:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+unitFix = str(unitFinder)[133:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
+'''
 
-"""
+'''
 # Redmart
 url = Request('https://www.lazada.sg/products/gala-apples-i301076962-s527122210.html?spm=a2o42.lazmart_search.list.1.75343f2aSWJ1G1&search=1', headers={'User-Agent': 'Mozilla/5.0'})
 page = urlopen(url)
@@ -159,23 +296,41 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 # Giant
-url = Request('https://giant.sg/unpolished-brown-rice-5kg-5021025', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\":\"')+9:html.find('\"price\":\"')+16]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[8400:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
+unitFix = str(unitFinder)[69:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break
 # Cold Storage
-url = Request('https://coldstorage.com.sg/magnolia-5015207', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\":\"')+9:html.find('\"price\":\"')+16]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[8500:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[0:text.find("|")-1]
+unitFinder = soup.findAll("div", {"class": "product_size product_detail"})
+unitFix = str(unitFinder)[69:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break 
 #Eamart
 url = Request('https://www.eamart.com/product/list/best-sellers/Coca-Cola-No-Sugar---Case-1032', headers={'User-Agent': 'Mozilla/5.0'})
 page = urlopen(url)
@@ -195,30 +350,44 @@ priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
 price = float("".join(priceFix))
 print(round(price, 2))
 #Dei
-url = Request('https://www.dei.com.sg/islandwide/retail/product/maggi-2-minute-instant-noodles-asam-laksa-5-x-78g/21845', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('\"price\" value=\"')+15:html.find('\"price\" value=\"')+20]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[9:text.find("|")-1]
 #Purely Fresh
-url = Request('https://www.purelyfresh.com.sg/fresh-fruits/2914-passionfruit.html', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('price:amount\" content=\"')+23:html.find('price:amount\" content=\"')+28]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]
+name = text[9:text.find(")")+1]
+unitFinder = soup.findAll("div", {"class": "product-information"})
+unitFix = str(unitFinder)[113:]
+for i in unitFix:
+    if i not in ["<", '"', "'", "!", "/"]:
+        unit += i 
+    else: 
+        break
 #MarketFresh.sg
-url = Request('https://marketfresh.com.sg/collections/chicken/products/chicken-thigh-1pc', headers={'User-Agent': 'Mozilla/5.0'})
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
-priceFinder = html[html.find('price:amount\" content=\"')+23:html.find('price:amount\" content=\"')+28]
-priceFix = [x for x in priceFinder if x not in ["'",'"',"\\",",","}",";",")"]]
-price = float("".join(priceFix))
-print(round(price, 2))
-"""
+soup = BeautifulSoup(html, "html.parser")
+text = soup.get_text()
+priceFix = text[2000:]
+price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+for i in range(5,10):
+    try: 
+        temp = int(price[i])
+    except: 
+        price = price[0:i]P
+name = text[18:text.find("|")-1]
+'''
+
