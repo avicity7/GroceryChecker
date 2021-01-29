@@ -10,6 +10,7 @@ units = []
 
 def storeSearch(searchString,fairpricePrice,fairpriceUnit):
     fairpricePrice = fairpricePrice[1:]
+    stores = ["Cold Storage","Dei","Giant"]
     #Cold Storage Search
     try:
         lst = [] 
@@ -98,7 +99,7 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         coldProductName =  "9999"
         coldPrice = "9999" 
         coldProductUnit = "9999"
-    print("Cold searched")
+    
     #Dei Store Search
     try:
         sep = "+"
@@ -147,7 +148,7 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         deiPrice = "9999"
         deiProductName = "9999"
         deiProductWeight = "9999"
-    print("Dei searched")
+    
     #Giant Store Search 
     try:
         sep = "+"
@@ -172,6 +173,8 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         decimal = str()
         unitFinder = soup.findAll("span", {"class": "size"})
         priceFinder = soup.findAll("div", {"class": "price_now price-buy price_normal"})
+        if priceFinder == []: 
+            priceFinder = priceFinder = soup.findAll("div", {"class": "price_now price_normal price-off-normal-price"})
         priceFinder = str(priceFinder[0])
 
         for i in range(0,len(priceFinder)):
@@ -237,54 +240,54 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         giantProductUnit = "9999"
         giantProductName = "9999"
         giantProductPrice = "9999"
-    print("Giant searched")
+    
     prices.append(coldPrice);prices.append(deiPrice);prices.append(giantProductPrice)
     names.append(coldProductName);names.append(deiProductName);names.append(giantProductName)
     units.append(coldProductUnit);units.append(deiProductWeight);units.append(giantProductUnit)
+    for i in range(0,len(units)):
+        units[i] = str(units[i]).replace(" ","")
     
     
-    lowest = float(fairpricePrice)
-    lowestIndex = 0
-    for i in range(0,len(prices)):
-        if float(prices[i]) < lowest: 
-            lowest = float(prices[i])
-            lowestIndex = i 
-            
-    if units[lowestIndex] == fairpriceUnit:
-        if lowestIndex == 0: 
-            print("Lowest price is from FairPrice.")
-        elif lowestIndex == 1: 
-            print("Lowest price is from Cold Storage.")
-        elif lowestIndex == 2:
-            print("Lowest price is from Dei.")
-        elif lowestIndex == 3: 
-            print("Lowest price is from Giant.")
-    else: 
-        del prices[lowestIndex]
-        del names[lowestIndex]
-        del units[lowestIndex]
-        lowest = fairpricePrice
-        lowestIndex = 0
+    while True:
+        lowest = float(fairpricePrice)
+        lowestIndex = 4
+        sameIndex = []
         for i in range(0,len(prices)):
             if float(prices[i]) < lowest: 
                 lowest = float(prices[i])
-                lowestIndex = i 
+                lowestIndex = i
+            elif float(prices[i]) == lowest:
+                sameIndex.append(i)
+                
+        if lowestIndex == 4:
+            print("The cheapest place to get this item is from FairPrice: {price}".format(price = fairpricePrice))
+
+            for i in sameIndex:
+                print("{store} has the item at the same price: {price}".format(store = stores[i],price = prices[i]))
         
-        if units[lowestIndex] == fairpriceUnit:
-            if lowestIndex == 0: 
-                print("Lowest price is from FairPrice.")
-            elif lowestIndex == 1: 
-                print("Lowest price is from Cold Storage.")
-            elif lowestIndex == 2:
-                print("Lowest price is from Dei.")
-            elif lowestIndex == 3: 
-                print("Lowest price is from Giant.")
+            break
+        elif len(sameIndex) >= 1:
+            if units[lowestIndex].lower() == fairpriceUnit.lower():
+                print("The cheapest place to get this item is from {store}: {price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
+                for i in sameIndex:
+                    print("{store} has the item at the same lowest price: {price}".format(store = stores[i],price = prices[i]))
+            else: 
+                del prices[lowestIndex]
+                del names[lowestIndex]
+                del units[lowestIndex]
+                del stores[lowestIndex]
+                continue
+            break
+        elif units[lowestIndex].lower() == fairpriceUnit.lower():
+            print("The cheapest place to get this item is from {store}: {price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
+            break
+                                
         else: 
             del prices[lowestIndex]
             del names[lowestIndex]
             del units[lowestIndex]
+            del stores[lowestIndex]
         
-
     return prices,names,units
     
 
@@ -292,7 +295,7 @@ extraLinks = []
 session = HTMLSession()
 productUnit = ""
 while True:
-    inp = input("Please input the item that you would like to find. Please be as specific as possible:")
+    inp = input("Please input the item that you would like to find. Please be as specific as possible: ")
     sep = "%20"
     inp = inp.split()
     inp = sep.join(inp)
@@ -306,8 +309,12 @@ while True:
                 if y[0]+y[1]+y[2]+y[3]+y[4]+y[5]+y[6]+y[7] == "/product":
                     product = y
                     break
+                else:
+                    product = ""
             except:
                 continue
+        if product == "":
+            raise ValueError
         url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
         page = urlopen(url)
         #Getting item parameters
@@ -331,56 +338,62 @@ while True:
                 productUnit += i 
             else: 
                 break 
-        
+
         print("\nItem found: {productname} {productunit} {cost}".format(productname = productName, productunit = productUnit, cost = price))
         print("\nIs this the item that you were looking for?")
-        inp = input("\nType yes or no:")
+        inp = input("\nType yes or no: ")
         #When item found is correct: 
         if inp == "yes":
             search = productName +" " + productUnit
             try:
                 print(storeSearch(search,price,productUnit))
+                prices = []
+                names = []
+                units = []
+                stores = ["Cold Storage","Dei","Giant"]
             except:
                 print("Sorry, we could not find this item on other stores.")
         #When item found is incorrect, going through other search results in Fairprice search: 
         elif inp == "no":
             print("\nAlright! We'll display the other top 5 search results:")
-            for times in range (1,6):
-                e.remove(product)
-                for y in e:
-                    try:
-                        if y[0]+y[1]+y[2]+y[3]+y[4]+y[5]+y[6]+y[7] == "/product":
-                            product = y
-                            url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
-                            page = urlopen(url)
-                            productUnit = ""
-                            html_bytes = page.read()
-                            html = html_bytes.decode("utf-8")
-                            soup = BeautifulSoup(html, "html.parser")
-                            text = soup.get_text()
-                            priceFix = text[700:]
-                            price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
-                            for i in range(5,10):
-                                try: 
-                                    temp = int(price[i])
-                                except: 
-                                    price = price[0:i]
-                            productName = text[0:text.find("|")-1]
-                            unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
-                            unitFix = str(unitFinder)[133:]
-                            for i in unitFix:
-                                if i != "<":
-                                    productUnit += i 
-                                else: 
-                                    break 
+            try:
+                for times in range (1,6):
+                    e.remove(product)
+                    for y in e:
+                        try:
+                            if y[0]+y[1]+y[2]+y[3]+y[4]+y[5]+y[6]+y[7] == "/product":
+                                product = y
+                                url = Request('https://www.fairprice.com.sg' + product, headers={'User-Agent': 'Mozilla/5.0'})
+                                page = urlopen(url)
+                                productUnit = ""
+                                html_bytes = page.read()
+                                html = html_bytes.decode("utf-8")
+                                soup = BeautifulSoup(html, "html.parser")
+                                text = soup.get_text()
+                                priceFix = text[700:]
+                                price = priceFix[priceFix.find("$"):priceFix.find("$")+10]
+                                for i in range(5,10):
+                                    try: 
+                                        temp = int(price[i])
+                                    except: 
+                                        price = price[0:i]
+                                productName = text[0:text.find("|")-1]
+                                unitFinder = soup.findAll("div", {"class": "sc-13n2dsm-10 cpkeZQ"})
+                                unitFix = str(unitFinder)[133:]
+                                for i in unitFix:
+                                    if i != "<":
+                                        productUnit += i 
+                                    else: 
+                                        break 
 
-                            extraLinks.append(product)        
-                            print("{time}. {productname} {productunit} {cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
-                            break
-                    except:
-                        continue
-
-            inp = input("\nWhich of these are what you are looking for? Enter 0 if it is none of them, else enter the number of the item:")
+                                extraLinks.append(product)        
+                                print("{time}. {productname} {productunit} {cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
+                                break
+                        except:
+                            continue
+            except:
+                print("")
+            inp = input("\nWhich of these are what you are looking for? Enter 0 if it is none of them, else enter the number of the item: ")
             if inp == "0":
                 continue
             #Correct item found 
@@ -410,6 +423,10 @@ while True:
                 search = productName +" " + productUnit
                 try:
                     print(storeSearch(search,price,productUnit))
+                    prices = []
+                    names = []
+                    units = []
+                    stores = ["Cold Storage","Dei","Giant"]
                 except: 
                     print("Sorry, we could not find that item in other stores.")
                 
@@ -417,4 +434,3 @@ while True:
     except:
         print("\nSorry, we are not able to find that item. Please enter a different item or name.")
         continue
-
