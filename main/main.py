@@ -172,7 +172,7 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         temp = str() 
         decimal = str()
         unitFinder = soup.findAll("span", {"class": "size"})
-        priceFinder = soup.findAll("div", {"class": "price_now price-buy price_normal"})
+        priceFinder = soup.findAll("div", {"class": "content_price"})
         if priceFinder == []: 
             priceFinder = priceFinder = soup.findAll("div", {"class": "price_now price_normal price-off-normal-price"}) # Price finder
         priceFinder = str(priceFinder[0])
@@ -288,7 +288,7 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
             del units[lowestIndex]
             del stores[lowestIndex]
         
-    return prices,names,units
+    return ""
     
 
 extraLinks = []
