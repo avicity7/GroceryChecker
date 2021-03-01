@@ -1,6 +1,8 @@
 from urllib.request import Request, urlopen
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
+import gui
+import sys
 
 
 prices = []
@@ -11,6 +13,7 @@ units = []
 # The remaining functions do not have much explanation as the method is the same but have been hardcoded for specific websites
 
 def storeSearch(searchString,fairpricePrice,fairpriceUnit):
+    
     fairpricePrice = fairpricePrice[1:]
     stores = ["Cold Storage","Dei","Giant"]
     #Cold Storage Search
@@ -31,8 +34,8 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
         text = soup.get_text() # We scrape the HTML of the website and store it's data into variables
         unitFinder = soup.findAll("span", {"class": "size"}) # We scope down the HTML to search for the information we want
         priceFinder = soup.findAll("div", {"class": "content_price"})
-        number = int() 
-        price = str() 
+        number = int()
+        price = str()
         sw = 0
         coldProductName = str()
         temp = str() 
@@ -249,6 +252,7 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
     
     
     while True:
+        lowestpricelist = ''
         lowest = float(fairpricePrice)
         lowestIndex = 4
         sameIndex = []
@@ -260,17 +264,22 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
                 sameIndex.append(i)
                 
         if lowestIndex == 4: # Printing the store which has the lowest price as well as the price
-            print("\nThe cheapest place to get this item is from FairPrice: {price}".format(price = fairpricePrice))
+            gui.sg.popup("\nThe cheapest place to get this item is from FairPrice: ${price}".format(price = fairpricePrice))
 
             for i in sameIndex:
-                print("\n{store} has the item at the same price: {price}".format(store = stores[i],price = prices[i]))
+                lowestpricelist += ("\n{store} has the item at the same price: ${price}".format(store = stores[i],price = prices[i]))
         
             break
+            if lowestpricelist != '':
+                gui.sg.popup(lowestpricelist)
+        
         elif len(sameIndex) >= 1:
             if units[lowestIndex].lower() == fairpriceUnit.lower():
-                print("\nThe cheapest place to get this item is from {store}: {price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
+                gui.sg.popup("\nThe cheapest place to get this item is from {store}: ${price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
                 for i in sameIndex:
-                    print("\n{store} has the item at the same lowest price: {price}".format(store = stores[i],price = prices[i]))
+                    lowestpricelist += ("\n{store} has the item at the same lowest price: ${price}".format(store = stores[i],price = prices[i]))
+                if lowestpricelist != '':
+                    gui.sg.popup(lowestpricelist)
             else: 
                 del prices[lowestIndex]
                 del names[lowestIndex]
@@ -278,8 +287,9 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
                 del stores[lowestIndex]
                 continue
             break
+            
         elif units[lowestIndex].lower() == fairpriceUnit.lower():
-            print("\nThe cheapest place to get this item is from {store}: {price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
+            gui.sg.popup("\nThe cheapest place to get this item is from {store}: ${price}".format(store = stores[lowestIndex], price = prices[lowestIndex]))
             break
                                 
         else: 
@@ -293,9 +303,19 @@ def storeSearch(searchString,fairpricePrice,fairpriceUnit):
 
 extraLinks = []
 session = HTMLSession()
-productUnit = ""
+gui.Mainpage()
+prevtext = '-'
 while True:
-    inp = input("Please input the item that you would like to find. Please be as specific as possible: ")
+    
+    inp = gui.textin
+    
+    if inp == prevtext:
+        inp = gui.sg.popup_get_text("Please enter another item as specifcally as possible: ")
+        
+        if inp in ("","Cancel",gui.sg.WIN_CLOSED):
+            sys.exit()
+    
+        
     sep = "%20"
     inp = inp.split()
     inp = sep.join(inp)
@@ -339,24 +359,24 @@ while True:
             else: 
                 break 
 
-        print("\nItem found: {productname} {productunit} {cost}".format(productname = productName, productunit = productUnit, cost = price))
-        print("\nIs this the item that you were looking for?")
-        inp = input("\nType yes or no: ")
+        inp = gui.sg.popup_yes_no("\nItem found: {productname} {productunit} {cost}".format(productname = productName, productunit = productUnit, cost = price)+"\nIs this the item that you were looking for?").lower()
+        
         #When item found is accepted by user: 
         if inp == "yes":
             search = productName +" " + productUnit
             try:
-                print(storeSearch(search,price,productUnit))
+                gui.sg.popup(storeSearch(search,price,productUnit))
                 prices = []
                 names = []
                 units = []
                 stores = ["Cold Storage","Dei","Giant"]
             except:
-                print("Sorry, we could not find this item on other stores.")
+                gui.sg.popup("Sorry, we could not find this item on other stores.")
         #When item found is rejected by user, going through top 5 results in Fairprice search: 
         elif inp == "no":
-            print("\nAlright! We'll display the other top 5 search results:")
+            gui.sg.popup("Alright! We'll display the other top 5 search results:")
             try:
+                productlist = ''
                 for times in range (1,6):
                     e.remove(product)
                     for y in e:
@@ -387,13 +407,14 @@ while True:
                                         break 
 
                                 extraLinks.append(product)        
-                                print("{time}. {productname} {productunit} {cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
+                                productlist += ("\n{time}. {productname} {productunit} {cost}".format(time = times, productname = productName, productunit = productUnit, cost = price))
                                 break
                         except:
                             continue
             except:
                 print("")
-            inp = input("\nWhich of these are what you are looking for? Enter 0 if it is none of them, else enter the number of the item: ")
+            gui.sg.popup_scrolled(productlist, no_titlebar = True)
+            inp = gui.sg.popup_get_text("Which of these are what you are looking for? Enter 0 if it is none of them, else enter the number of the item: ")
             if inp == "0":
                 continue
             #If one of the 5 links has been selected; we find details of that product
@@ -428,9 +449,10 @@ while True:
                     units = []
                     stores = ["Cold Storage","Dei","Giant"]
                 except: 
-                    print("Sorry, we could not find that item in other stores.")
-                
+                    gui.sg.popup("Sorry, we could not find that item in other stores.")
+        prevtext = gui.textin
                           
     except:
-        print("\nSorry, we are not able to find that item. Please enter a different item or name.")
+        prevtext = gui.textin
+        gui.sg.popup("Sorry, we are not able to find that item. Please enter a different item or name.")
         continue
